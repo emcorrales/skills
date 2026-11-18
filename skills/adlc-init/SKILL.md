@@ -1,7 +1,8 @@
 ---
 name: adlc-init
-description: Set up the AI-native development lifecycle (intent → spec → plan → build → verify) in a repo. It scaffolds intent.md, a /spec skill and template, a read-only verifier agent, a post-edit verify hook, a git pre-commit hook, docs/specs and docs/plans, and a CLAUDE.md workflow section, then wires verify/run.sh to the project's real checks. Use it when the user wants to "set up ADLC/SDLC", "add the spec/plan/verify workflow", "bootstrap Claude Code for this project", "add a verifier and hooks", or starts a new project and wants the same workflow as their other repos, even if they don't say "ADLC".
+description: Set up the AI-native dev lifecycle in a repo (intent.md, /spec, verifier agent, verify hooks, docs/specs and docs/plans).
 argument-hint: "[target dir, default: current project]"
+disable-model-invocation: true
 ---
 
 # adlc-init: set up the AI-native dev lifecycle in a repo
