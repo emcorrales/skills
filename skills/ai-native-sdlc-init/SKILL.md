@@ -42,8 +42,28 @@ In the private layout `git status` stays clean, and nothing reaches a commit or 
 The skills, hooks and scripts are the same; they detect the layout at runtime, and
 the scaffold rewrites paths in the prose (`intent/…` → `.sdlc/intent/…`).
 `sdlc/record.sh` (or `.sdlc/record.sh`) commits artifacts to the right history in either
-layout. Choose private when teammates haven't adopted the workflow. Switching to team
-later means running the scaffold without `--local` and moving `.sdlc/` content into place.
+layout. Choose private when teammates haven't adopted the workflow.
+
+## Switching layouts
+When the user asks to switch (the team adopts it, or stops using it):
+```bash
+python3 <this-skill-dir>/scripts/switch.py <target> --to shared|private --dry-run   # show the user
+python3 <this-skill-dir>/scripts/switch.py <target> --to shared|private [--import-history]
+```
+It moves the files, rewrites their paths and moves settings entries. It also swaps the
+pre-commit hook and the exclude list. It refuses to start if a destination exists or
+both layouts are present. It stages the result and **never commits**, except that
+`--import-history` with `--to shared` replays `.sdlc`'s intent history as commits on the
+current branch (original authors and dates, so delivery metrics carry over). Ask before
+using that flag: those commits are visible to the team.
+- **→ shared:** afterwards, offer to move shareable parts of `CLAUDE.local.md` into
+  `CLAUDE.md` (user decides what), and to add CI with `scaffold.py --plays ci,…`. The old
+  private history is parked at `.git/sdlc-private-history.git`.
+- **→ private:** it stages removal of the shared workflow files and of its GitHub
+  workflows, since CI would break without `verify/`. Committing that removal is the
+  user's call, and teammates will see it. Afterwards, offer to copy the workflow
+  sections of `CLAUDE.md` into `CLAUDE.local.md`.
+- Then run step 5's checks in the new layout and report what's staged.
 
 **Advisory vs deterministic.** CLAUDE.md and skills are advisory: Claude can ignore them.
 Hooks, `verify/run.sh`, CI and evals can't be ignored. Anything that must always hold

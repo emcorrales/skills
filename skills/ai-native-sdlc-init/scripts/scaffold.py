@@ -42,6 +42,7 @@ LOCAL_TEXT = [
     (re.compile(r"CLAUDE\.md(\s+\"Things)"), r"CLAUDE.local.md\1"),
     (re.compile(r"the CLAUDE\.md line"), "the CLAUDE.local.md line"),
 ]
+EXCLUDE_MARKER = "# ai-native-sdlc-init --local: personal workflow files"
 LOCAL_WORKTREEINCLUDE = "\n# Private SDLC layout (untracked, so worktrees need it copied):\n.sdlc/**\n.claude/**\nCLAUDE.local.md\n"
 
 
@@ -197,7 +198,7 @@ def exclude(target: Path, created: list, dry: bool) -> None:
     if not dry:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a") as f:
-            f.write("\n# ai-native-sdlc-init --local: personal workflow files\n" + "\n".join(want) + "\n")
+            f.write(f"\n{EXCLUDE_MARKER}\n" + "\n".join(want) + "\n")
 
 
 def init_private_repo(target: Path, dry: bool) -> None:
