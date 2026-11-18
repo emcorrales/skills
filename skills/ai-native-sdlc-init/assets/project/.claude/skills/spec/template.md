@@ -26,6 +26,7 @@ What changes and why, in 2–4 sentences. Write it from the user's side, not the
 ## Acceptance (how we'll know it's done)
 - [ ] `verify/run.sh` → `VERIFY PASSED`
 - [ ] New check: … (in `verify/run.sh`)
+- **Signal to watch after release** (`docs/signals.md`): … or none
 
 ## Out of scope
 - …

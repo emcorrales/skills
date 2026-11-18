@@ -1,0 +1,18 @@
+# Stage 4 (Test) in CI: the same definition of done as local, on every PR.
+# Tailor the setup steps so verify/run.sh has its toolchain. Not on GitHub? Port the
+# single `verify/run.sh` step to your CI and delete this file.
+name: verify
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Toolchain for verify/run.sh, e.g.:
+      # - uses: actions/setup-node@v4
+      #   with: { node-version: 20 }
+      # - run: npm ci
+      - run: verify/run.sh

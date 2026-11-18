@@ -6,7 +6,8 @@
 - Copies assets/project/** into the target. Existing files are skipped, never replaced.
 - Replaces {{PROJECT_NAME}} in copied files (default: the target folder's name).
 - Merges assets/settings-fragment.json into .claude/settings.json: adds plansDirectory,
-  worktree.baseRef and the PostToolUse hook only if they are missing.
+  worktree.baseRef, the PostToolUse verify hook and the PreToolUse approval gate, each
+  only if it is missing.
 - Sets git core.hooksPath=.githooks if the target is a git repo and it is unset.
 - Never touches CLAUDE.md: the caller merges assets/CLAUDE-workflow.md by hand.
 Prints one line per file: CREATED / SKIPPED (exists) / MERGED / UNCHANGED.
@@ -15,7 +16,7 @@ import argparse, json, os, shutil, stat, subprocess, sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent.parent / "assets"
-HOOK_CMD_MARK = "post-edit-verify.sh"
+HOOK_MARKS = {"PostToolUse": "post-edit-verify.sh", "PreToolUse": "approval-gate.sh"}
 
 
 def copy_tree(target: Path, name: str, dry: bool) -> None:
@@ -45,9 +46,10 @@ def merge_settings(target: Path, dry: bool) -> None:
     before = json.dumps(cur, sort_keys=True)
     cur.setdefault("plansDirectory", frag["plansDirectory"])
     cur.setdefault("worktree", {}).setdefault("baseRef", frag["worktree"]["baseRef"])
-    post = cur.setdefault("hooks", {}).setdefault("PostToolUse", [])
-    if HOOK_CMD_MARK not in json.dumps(post):
-        post.extend(frag["hooks"]["PostToolUse"])
+    for event, mark in HOOK_MARKS.items():
+        entries = cur.setdefault("hooks", {}).setdefault(event, [])
+        if mark not in json.dumps(entries):
+            entries.extend(frag["hooks"][event])
     if json.dumps(cur, sort_keys=True) == before:
         print("UNCHANGED         .claude/settings.json")
         return
