@@ -1,0 +1,13 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "emc-skills",
+  "description": "Emmanuel's personal Claude Code skills.",
+  "owner": { "name": "Emmanuel Corrales" },
+  "plugins": [
+    {
+      "name": "emc",
+      "source": "./",
+      "description": "Personal skills: adlc-init (set up the AI-native dev lifecycle in a repo)."
+    }
+  ]
+}

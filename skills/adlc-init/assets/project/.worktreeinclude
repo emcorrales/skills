@@ -1,0 +1,5 @@
+# Git-ignored files Claude Code copies into new worktrees (claude --worktree,
+# subagent worktrees). Only files that are git-ignored AND match are copied.
+# List what verify/run.sh needs but git doesn't track, e.g.:
+# .env.local
+# node_modules/**

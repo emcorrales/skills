@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Backstop for edits made outside Claude's Edit/Write tools (shell edits, other
+# editors): the PostToolUse hook can't see those. Enable once per clone:
+#   git config core.hooksPath .githooks
+exec "$(git rev-parse --show-toplevel)/verify/run.sh" --fast
