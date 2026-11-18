@@ -19,15 +19,19 @@ in and committed; `claude -p` runs there; then the grading happens from outside 
 agent's workspace. The agent can't pass by editing the checks: evals/ isn't in its
 workspace, and changes outside may_change fail the run. An empty or errored agent
 result is a failure. Checks run in the scratch dir with EVAL_BASE (the commit before the
-agent ran), EVAL_HELPERS (this evals/ dir) and EVAL_SCRATCH set.
+agent ran), EVAL_HELPERS (this evals/ dir), EVAL_SCRATCH and EVAL_VERIFY (the verify
+script to grade with) set. In the private layout .sdlc/ is untracked, so the run gets a
+copy of .sdlc/verify for its feedback loop, and grading uses the original.
 Never pass --bare to claude here: it skips CLAUDE.md, skills and hooks, the files under test.
 """
 import argparse, fnmatch, json, os, shutil, subprocess, sys, tempfile, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
-DEFAULT_TOOLS = "Read,Edit,Write,Glob,Grep,Bash(verify/run.sh:*)"
+LOCAL = HERE.parent.name == ".sdlc"    # private layout: .sdlc/evals/, untracked
+ROOT = HERE.parent.parent if LOCAL else HERE.parent
+VERIFY_REL = ".sdlc/verify/run.sh" if LOCAL else "verify/run.sh"
+DEFAULT_TOOLS = f"Read,Edit,Write,Glob,Grep,Bash({VERIFY_REL}:*)"
 
 
 def sh(args, cwd, **kw):
@@ -42,14 +46,17 @@ def run_eval(spec: dict, keep: bool) -> dict:
         res["failures"].append(f"worktree at {spec['from']}: {r.stderr.strip()}")
         return res
     try:
-        for p in ("evals", ".claude", "CLAUDE.md"):
+        for p in ("evals", ".claude", "CLAUDE.md", "CLAUDE.local.md"):
             t = scratch / p
             shutil.rmtree(t) if t.is_dir() else t.unlink(missing_ok=True)
-        if (ROOT / "CLAUDE.md").exists():
-            shutil.copy2(ROOT / "CLAUDE.md", scratch / "CLAUDE.md")
+        for f in ("CLAUDE.md", "CLAUDE.local.md"):
+            if (ROOT / f).exists():
+                shutil.copy2(ROOT / f, scratch / f)
         if (ROOT / ".claude").is_dir():
             shutil.copytree(ROOT / ".claude", scratch / ".claude",
-                            ignore=shutil.ignore_patterns("settings.local.json", "worktrees"))
+                            ignore=shutil.ignore_patterns("worktrees"))
+        if LOCAL and (ROOT / ".sdlc/verify").is_dir():
+            shutil.copytree(ROOT / ".sdlc/verify", scratch / ".sdlc/verify")
         sh(["git", "add", "-A"], scratch)
         sh(["git", "-c", "user.name=evals", "-c", "user.email=evals@localhost", "commit",
             "-q", "--no-verify", "--allow-empty", "-m", "eval: config under test"], scratch)
@@ -76,7 +83,9 @@ def run_eval(spec: dict, keep: bool) -> dict:
             res["failures"].append(f"changed outside may_change: {', '.join(outside)}")
         res["changed"] = sorted(changed)
 
-        env = {**os.environ, "EVAL_BASE": base, "EVAL_HELPERS": str(HERE), "EVAL_SCRATCH": str(scratch)}
+        verify = (ROOT if LOCAL else scratch) / VERIFY_REL
+        env = {**os.environ, "EVAL_BASE": base, "EVAL_HELPERS": str(HERE),
+               "EVAL_SCRATCH": str(scratch), "EVAL_VERIFY": str(verify)}
         for chk in spec.get("checks", []):
             r = subprocess.run(chk["run"], shell=True, cwd=scratch, env=env,
                                capture_output=True, text=True)
@@ -110,7 +119,7 @@ def main() -> int:
         if not specs:
             print(f"No evals named {', '.join(a.names)}."); return 1
     if not specs:
-        print("No evals yet: add evals/<name>.json (see evals/_example.json)."); return 0
+        print(f"No evals yet: add {HERE.relative_to(ROOT)}/<name>.json (see _example.json)."); return 0
     results = []
     for s in specs:
         r = run_eval(s, a.keep)

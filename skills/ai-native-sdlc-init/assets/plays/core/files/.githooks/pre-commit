@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Backstop for edits made outside Claude's Edit/Write tools (shell edits, other
-# editors), which the Claude hooks can't see. Enable once per clone:
+# editors), which the Claude hooks can't see. Team layout: enable once per clone with
 #   git config core.hooksPath .githooks
+# Private layout: installed as .git/hooks/pre-commit, so it only runs for you.
 root=$(git rev-parse --show-toplevel)
 # Keep credentials out of the diff. Extend the patterns for the services you use.
 if git diff --cached -U0 --no-color | grep -E '^\+' | grep -Eq '(AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{36}|sk-ant-[A-Za-z0-9_-]{20,}|xox[baprs]-[A-Za-z0-9-]{10,})'; then
   echo "pre-commit: the staged diff looks like it contains a credential. Remove it (use an env var or secret store)." >&2
   exit 1
 fi
-exec "$root/verify/run.sh" --fast
+v="$root/.sdlc/verify/run.sh"; [ -x "$v" ] || v="$root/verify/run.sh"
+cd "$root" && exec "$v" --fast

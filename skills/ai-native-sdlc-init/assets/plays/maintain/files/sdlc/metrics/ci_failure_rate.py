@@ -6,12 +6,14 @@
 One reading per day that had completed runs: failed / completed. Days without runs are
 skipped, not counted as zero. Needs the gh CLI, authenticated.
 """
-import argparse, collections, datetime, json, subprocess, sys
+import argparse, collections, datetime, json, shutil, subprocess, sys
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--days", type=int, default=45)
 ap.add_argument("--workflow")
 a = ap.parse_args()
+if not shutil.which("gh"):
+    sys.exit("BLOCKED: gh CLI not found (install it and run `gh auth login`)")
 cmd = ["gh", "run", "list", "--limit", "1000", "--json", "conclusion,createdAt,status"]
 if a.workflow:
     cmd += ["--workflow", a.workflow]

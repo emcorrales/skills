@@ -6,7 +6,11 @@
 # Back each hard constraint in CLAUDE.md with a step where possible. A step that can't
 # run (missing tool) must print BLOCKED and fail, never silently pass.
 set -u
-cd "$(dirname "$0")/.."
+# Run against the checkout you're in (a worktree, an eval scratch copy), not the one this
+# script lives in. A private .sdlc/ is its own repo, so step out of it.
+top=$(git rev-parse --show-toplevel 2>/dev/null) || top=$(cd "$(dirname "$0")/.." && pwd)
+case "$top" in */.sdlc) top=${top%/.sdlc} ;; esac
+cd "$top"
 fast=0; [ "${1:-}" = "--fast" ] && fast=1
 fail=0; ran=0
 

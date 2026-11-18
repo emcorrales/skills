@@ -23,11 +23,12 @@ Change: $ARGUMENTS
    never saw this conversation could implement from the plan alone.
 4. **Get it accepted** (ExitPlanMode). Iterate on feedback until the owner accepts.
 5. **Record it first.** Before touching code, write the accepted plan to `plan.md` next
-   to the spec, with the date.
+   to the spec, with the date, and record it:
+   `sdlc/record.sh "plan: <slug>" intent/<dir>/plan.md`.
 6. **Implement** in the planned order, running `verify/run.sh --fast` as you go (the
    post-edit hook does this too). New behavior gets the test named in Proof. When the
-   work departs from the plan, update `plan.md` in the same commit as the change.
+   work departs from the plan, update `plan.md` and record it alongside the change.
 7. **Done means proven:** run `verify/run.sh` and paste the output, then run the
    `verifier` agent on this change folder. Fix what it reports and re-run it.
-8. **Hand off.** Summarize the work, cited by R-ID, and offer to commit `plan.md` and the
-   code together (`feat: <slug>` or `fix: <slug>`). Don't push or merge.
+8. **Hand off.** Summarize the work, cited by R-ID, and offer to commit the code
+   (`feat: <slug>` or `fix: <slug>`). Don't push or merge.

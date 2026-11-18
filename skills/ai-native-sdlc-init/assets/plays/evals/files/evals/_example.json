@@ -5,7 +5,7 @@
   "prompt": "The status endpoint accepts unknown fields in the request body. Make it reject them with a 400, and add a test.",
   "may_change": ["src/api/*", "tests/*"],
   "checks": [
-    { "name": "verify passes", "run": "verify/run.sh" },
+    { "name": "verify passes", "run": "\"$EVAL_VERIFY\"" },
     { "name": "no existing test lines removed", "run": "! git diff \"$EVAL_BASE\" -- tests | grep -E '^-[^-]'" },
     { "name": "behaviour: unknown field rejected", "run": "python3 \"$EVAL_HELPERS\"/helpers/example_check.py" }
   ]

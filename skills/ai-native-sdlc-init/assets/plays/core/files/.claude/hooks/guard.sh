@@ -10,6 +10,8 @@ path=$(printf '%s' "$input" | python3 -c 'import json,sys; t=json.load(sys.stdin
 [ -n "$path" ] || exit 0
 dir=$(dirname "$path"); while [ ! -d "$dir" ]; do dir=$(dirname "$dir"); done
 root=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null) || exit 0
+# A private .sdlc/ is its own git repo; the project root is its parent.
+case "$root" in */.sdlc) root=${root%/.sdlc} ;; esac
 rel=$(python3 -c 'import os,sys; print(os.path.relpath(os.path.realpath(sys.argv[1]), os.path.realpath(sys.argv[2])))' "$path" "$root")
 case "$rel" in ../*) exit 0 ;; esac
 
@@ -30,7 +32,8 @@ case "$rel" in
 esac
 
 case "$rel" in
-  verify/*|evals/*|sdlc/bands.json|.claude/hooks/*|.claude/settings.json|.githooks/*|.github/workflows/*|REVIEW.md)
+  verify/*|evals/*|sdlc/bands.json|REVIEW.md|.sdlc/verify/*|.sdlc/evals/*|.sdlc/bands.json|.sdlc/REVIEW.md|\
+  .claude/hooks/*|.claude/settings.json|.claude/settings.local.json|.githooks/*|.github/workflows/*)
     decide ask "$rel defines how work is checked or gated. Confirm only if this change is meant to alter the checks." ;;
 esac
 exit 0

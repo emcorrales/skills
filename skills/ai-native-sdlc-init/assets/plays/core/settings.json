@@ -1,7 +1,7 @@
 {
   "worktree": { "baseRef": "head" },
   "permissions": {
-    "allow": ["Bash(verify/run.sh:*)", "Bash(python3 sdlc/delivery.py:*)"]
+    "allow": ["Bash(verify/run.sh:*)", "Bash(python3 sdlc/delivery.py:*)", "Bash(sdlc/record.sh:*)"]
   },
   "hooks": {
     "PreToolUse": [

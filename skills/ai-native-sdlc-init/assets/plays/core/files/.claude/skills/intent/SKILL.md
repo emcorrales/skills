@@ -23,6 +23,6 @@ Intent says **what is wanted, why, and under which constraints**. No design, no 
    constraint from CLAUDE.md that this change touches. If an external ticket exists,
    put its ID on the `Ticket:` line (the ticket should link back to the commit).
 4. **Stop.** Show the file and ask the owner to correct anything wrong, then accept or
-   reject. On **accept**: set Status `accepted` and commit only that file
-   (`intent: <slug>`). On **reject**: set Status `rejected`, commit it anyway (a closed
-   intent is part of the record). Then suggest `/spec intent/<dir>`.
+   reject. On **accept**: set Status `accepted` and record it:
+   `sdlc/record.sh "intent: <slug>" intent/<dir>/intent.md`. On **reject**: set Status
+   `rejected` and record it anyway (a closed intent is part of the record). Then suggest `/spec intent/<dir>`.

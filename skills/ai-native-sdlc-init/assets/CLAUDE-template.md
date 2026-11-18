@@ -1,4 +1,6 @@
 # {{PROJECT_NAME}}
+<!-- Private layout: this becomes CLAUDE.local.md, keep only Hard constraints,
+     Verifying your work, Workflow and Things Claude gets wrong, with paths under .sdlc/. -->
 
 <One or two sentences: what this is and who uses it.>
 

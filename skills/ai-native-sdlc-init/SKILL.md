@@ -1,7 +1,7 @@
 ---
 name: ai-native-sdlc-init
-description: Set up the AI-native SDLC playbook in a repo as modular plays — intent/spec/plan artifacts per change, CLAUDE.md, feedback loop and guardrail hooks, approval gates, and optional PR review, CI, evals and metrics-driven maintenance.
-argument-hint: "[target dir, default: current project] [plays: review,ci,evals,maintain]"
+description: Set up the AI-native SDLC playbook in a repo as modular plays — intent/spec/plan artifacts per change, CLAUDE.md, feedback loop and guardrail hooks, approval gates, and optional PR review, CI, evals and metrics-driven maintenance. Team layout (committed) or a private --local layout that changes nothing teammates see.
+argument-hint: "[target dir, default: current project] [plays: review,ci,evals,maintain] [--local]"
 disable-model-invocation: true
 ---
 
@@ -25,6 +25,25 @@ production feeds the next intent:
 | 4 Test | `verify/run.sh` (hooks, verifier agent, CI, evals) | — deterministic |
 | 5 Deploy | PR reviewed per `REVIEW.md`; approval-gate hook | merge, release |
 | 6 Maintain | band breach → draft `intent.md` (back to 1) | triage |
+
+## Team or private layout
+
+| | Team (default) | Private (`--local`) |
+|---|---|---|
+| For | repos where everyone uses the workflow | shared repos where only you do |
+| Artifacts, verify, evals, bands, REVIEW.md | `intent/`, `verify/`, `evals/`, `sdlc/`, `REVIEW.md`, committed | all under `.sdlc/`, with its **own private git repo** for history |
+| Skills, agents, hooks | `.claude/…`, committed | `.claude/…`, hidden via `.git/info/exclude` |
+| Settings | `.claude/settings.json` | `.claude/settings.local.json` |
+| Your notes and constraints | `CLAUDE.md` | `CLAUDE.local.md` (the team's CLAUDE.md is untouched) |
+| Pre-commit | `.githooks/` + `core.hooksPath` | `.git/hooks/pre-commit` (skipped if a hooks manager owns hooks) |
+| CI (`ci` play, workflows of `evals`/`maintain`) | GitHub Actions | not installed; run evals and band checks locally |
+
+In the private layout `git status` stays clean, and nothing reaches a commit or a push.
+The skills, hooks and scripts are the same; they detect the layout at runtime, and
+the scaffold rewrites paths in the prose (`intent/…` → `.sdlc/intent/…`).
+`sdlc/record.sh` (or `.sdlc/record.sh`) commits artifacts to the right history in either
+layout. Choose private when teammates haven't adopted the workflow. Switching to team
+later means running the scaffold without `--local` and moving `.sdlc/` content into place.
 
 **Advisory vs deterministic.** CLAUDE.md and skills are advisory: Claude can ignore them.
 Hooks, `verify/run.sh`, CI and evals can't be ignored. Anything that must always hold
@@ -52,6 +71,8 @@ loop needs CI and intent. Plays can be added later by running this skill again.
   the build/test/lint setup (`package.json`, `Makefile`, `pyproject.toml`, …). Note which
   commands exist and how long they take, whether the remote is GitHub, and whether
   `gh` is authenticated.
+- **Layout:** use `--local` if the user asks for a private or personal setup, or the repo
+  is shared and they haven't said the team is adopting it. If unclear, ask (step 2).
 - Existing pieces win: the scaffold never overwrites, so adapt to an existing
   `verify/run.sh`, hook, agent or skill of the same name instead of duplicating it.
 
@@ -60,6 +81,7 @@ Draft answers from the code first so the user just confirms:
 - **Hard constraints:** rules never traded off (e.g. "no network calls", "Python 3.9",
   "no secrets in the repo").
 - **Done when:** which checks prove it works, and which are fast enough for every edit.
+- **Layout:** team or private (only if step 1 didn't settle it).
 - **Plays:** recommend core plus whatever fits (GitHub remote → `ci`; 3+ merged tasks
   worth replaying → `evals`; review on every PR → `review`; Actions history or
   monitoring → `maintain`).
@@ -67,22 +89,35 @@ Draft answers from the code first so the user just confirms:
 ### 3. Scaffold
 ```bash
 python3 <this-skill-dir>/scripts/scaffold.py --list
-python3 <this-skill-dir>/scripts/scaffold.py <target> --plays <list> --dry-run   # show the user
-python3 <this-skill-dir>/scripts/scaffold.py <target> --plays <list> [--name "<Project>"]
+python3 <this-skill-dir>/scripts/scaffold.py <target> --plays <list> [--local] --dry-run   # show the user
+python3 <this-skill-dir>/scripts/scaffold.py <target> --plays <list> [--local] [--name "<Project>"]
 ```
 It reports CREATED / SKIPPED / MERGED for each file. Settings are merged, never replaced:
 it adds missing keys and permission rules, plus hooks whose command isn't registered yet.
-It sets `core.hooksPath=.githooks` only if unset. If the hooks path points elsewhere
+In team layout it sets `core.hooksPath=.githooks` only if unset. In private layout it
+adds every created path to `.git/info/exclude` and creates `.sdlc/.git`. It also
+refuses `ci`, which is only shared workflows. If the hooks path points elsewhere
 (husky…), tell the user, and suggest calling `.githooks/pre-commit` from their hook.
 
 ### 4. Tailor (this is the real work)
+Paths below are for the team layout; in the private layout `intent/`, `verify/`,
+`evals/` and `REVIEW.md` sit under `.sdlc/`, and `sdlc/x` is `.sdlc/x`.
+
+**private layout, first:** never edit tracked files: no edits to the team's CLAUDE.md,
+CI or config. `verify/run.sh` wraps the commands the team already has (their test and
+lint scripts); it doesn't add tooling to the repo. Put your hard constraints, workflow
+and corrections in `CLAUDE.local.md`. For `maintain`, run `python3 .sdlc/check.py`
+yourself, or schedule it locally (cron, `/loop`).
+
 **core**
 - **`verify/run.sh`:** one `step` per real check. Fast ones (lint, unit tests,
   constraint scans; ~1s total) go above the `if`, slow ones (e2e, build) inside it. Back
   each hard constraint with a check where possible, even a `grep`. A missing tool prints
   BLOCKED and fails. Use only commands that exist; run each once. Remove the "no checks"
   warning only once real steps exist.
-- **`CLAUDE.md`:** if missing, write it from `assets/CLAUDE-template.md` (as `/init`
+- **`CLAUDE.md`** (private layout: `CLAUDE.local.md`, with only Hard constraints,
+  Verifying your work, Workflow and Things Claude gets wrong, since the team's CLAUDE.md
+  already covers the project. Rewrite the template's paths to `.sdlc/…`). Team layout: if missing, write it from `assets/CLAUDE-template.md` (as `/init`
   would, then cut it to a page). If present, merge in only the sections it lacks and
   leave the user's content alone. Fill in Commands with healthy output, and fill in Hard
   constraints. Remove the `<play: …>` placeholders for plays not installed, and keep the
@@ -123,8 +158,8 @@ user before running it. Each production incident should add an eval.
 **maintain:** keep `ci_failure_rate` if the repo has Actions history, and add a band for
 each metric the project really has: a script that prints readings as JSON. Keep 2σ
 read-only. 3σ acts only through `routes` that are pre-approved and reversible: a draft
-PR, or a rollback runbook. Add `step "band detection tests" python3 -m unittest -q
-sdlc/test_detect.py` to the fast section of `verify/run.sh`. Run
+PR, or a rollback runbook. Add `step "band detection tests" python3 sdlc/test_detect.py` to the fast section of
+`verify/run.sh`. Run
 `python3 sdlc/check.py --dry-run` and show the output.
 
 ### 5. Verify the setup
@@ -139,6 +174,8 @@ sdlc/test_detect.py` to the fast section of `verify/run.sh`. Run
   echo '{"tool_input":{"file_path":"'"$PWD"'/<a source file>"}}'        | .claude/hooks/post-edit-verify.sh; echo $?  # 0
   ```
 - `python3 sdlc/delivery.py` runs (it prints "No intent/<change>/ folders" on a new setup).
+- Private layout: `git status --porcelain` prints nothing. (Hook paths in the commands
+  above become `.sdlc/verify/run.sh` and so on.)
 
 ### 6. Report
 - What was created, skipped and merged, and which plays are installed.
@@ -150,4 +187,6 @@ sdlc/test_detect.py` to the fast section of `verify/run.sh`. Run
   them.
 - The first move: `/intent <next change>`.
 
-Don't commit unless asked. If asked, put everything in one commit ("Set up AI-native SDLC").
+Team layout: don't commit unless asked. If asked, put everything in one commit ("Set up
+AI-native SDLC"). Private layout: there is nothing to commit in the project; the setup
+is already recorded in `.sdlc/`'s own history.

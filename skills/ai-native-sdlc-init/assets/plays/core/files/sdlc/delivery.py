@@ -9,14 +9,22 @@ Per change (the playbook's leading and lagging indicators for stages 1-3):
   intent edits   commits to intent.md after spec.md was first committed (intent rework)
   spec edits     commits to spec.md after plan.md was first committed (requirements rework)
 Plus repeat corrections: bullets under CLAUDE.md "Things Claude gets wrong".
-Only committed files count; uncommitted drafts are ignored.
+Only recorded (committed) files count; drafts are ignored. Works in the team layout
+(sdlc/, intent/ in the repo) and the private one (.sdlc/ with its own git history).
 """
 import json, re, statistics, subprocess, sys
 from pathlib import Path
 
 
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+LOCAL = HERE.name == ".sdlc"
+ART = HERE if LOCAL else ROOT          # holds intent/ and the git history that records it
+CLAUDE_MD = ROOT / ("CLAUDE.local.md" if LOCAL else "CLAUDE.md")
+
+
 def git(*args):
-    return subprocess.run(["git", *args], capture_output=True, text=True).stdout
+    return subprocess.run(["git", "-C", str(ART), *args], capture_output=True, text=True).stdout
 
 
 def commit_times(path: Path):
@@ -33,9 +41,8 @@ def hours(a, b):
 
 
 def main():
-    root = Path(git("rev-parse", "--show-toplevel").strip() or ".")
     rows = []
-    for d in sorted(p for p in (root / "intent").glob("*/") if p.is_dir()):
+    for d in sorted(p for p in (ART / "intent").glob("*/") if p.is_dir()):
         t = {n: commit_times(d / f"{n}.md") for n in ("intent", "spec", "plan")}
         first = {n: (v[0] if v else None) for n, v in t.items()}
         rows.append({
@@ -47,7 +54,7 @@ def main():
             "intent edits after spec": sum(x > first["spec"] for x in t["intent"]) if first["spec"] else None,
             "spec edits after plan": sum(x > first["plan"] for x in t["spec"]) if first["plan"] else None,
         })
-    claude_md = root / "CLAUDE.md"
+    claude_md = CLAUDE_MD
     wrong = 0
     if claude_md.exists():
         m = re.search(r"^## Things Claude gets wrong[^\n]*\n(.*?)(?=^## |\Z)", claude_md.read_text(), re.M | re.S)
@@ -67,7 +74,7 @@ def main():
             vals = [r[c] for r in rows if r[c] is not None]
             if vals:
                 print(f"median {c}: {statistics.median(vals)}")
-    print(f"CLAUDE.md 'Things Claude gets wrong' entries: {wrong}")
+    print(f"{CLAUDE_MD.name} 'Things Claude gets wrong' entries: {wrong}")
     return 0
 
 

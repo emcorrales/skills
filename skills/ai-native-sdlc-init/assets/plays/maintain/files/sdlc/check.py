@@ -22,7 +22,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from detect import detect  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+HERE = Path(__file__).resolve().parent      # sdlc/ (team) or .sdlc/ (private)
+ROOT = HERE.parent
+INTENT = (HERE if HERE.name == ".sdlc" else ROOT) / "intent"
 LEVEL = {"none": 0, "1sigma": 1, "2sigma": 2, "3sigma": 3}
 
 
@@ -61,7 +63,7 @@ def main():
     ap.add_argument("--metric")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
-    bands = json.loads((ROOT / "sdlc/bands.json").read_text())["bands"]
+    bands = json.loads((HERE / "bands.json").read_text())["bands"]
     worst = 0
     for band in bands:
         if a.metric and band["metric"] != a.metric:
@@ -85,7 +87,7 @@ def main():
         if not cfg or cfg.get("action") == "log" or a.dry_run:
             continue
         today = datetime.date.today().isoformat()
-        out_dir = ROOT / "intent" / f"{today}-breach-{name}"
+        out_dir = INTENT / f"{today}-breach-{name}"
         if out_dir.exists():
             print(f"        {out_dir.relative_to(ROOT)} already exists; not diagnosing again today")
             continue

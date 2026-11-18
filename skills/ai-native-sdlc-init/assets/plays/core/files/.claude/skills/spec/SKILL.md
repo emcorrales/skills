@@ -29,5 +29,5 @@ Nobody writes code in this step.
 4. If the intent itself turns out wrong or incomplete, stop and say so: the fix is to
    amend `intent.md` (a changed intent restarts design), not to paper over it here.
 5. **Stop** for the owner's **go / no-go**. Don't plan or edit code. On **go**: set Status
-   `approved`, commit only `spec.md` (`spec: <slug>`), and suggest
-   `/implement intent/<dir>`. On **no-go**: set Status `rejected` and commit it.
+   `approved`, record it (`sdlc/record.sh "spec: <slug>" intent/<dir>/spec.md`), and
+   suggest `/implement intent/<dir>`. On **no-go**: set Status `rejected` and record it.
