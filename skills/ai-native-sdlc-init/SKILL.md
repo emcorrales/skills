@@ -1,11 +1,11 @@
 ---
-name: adlc-init
+name: ai-native-sdlc-init
 description: Set up the AI-native dev lifecycle in a repo (intent.md, /spec, verifier agent, verify hooks, docs/specs and docs/plans).
 argument-hint: "[target dir, default: current project]"
 disable-model-invocation: true
 ---
 
-# adlc-init: set up the AI-native dev lifecycle in a repo
+# ai-native-sdlc-init: set up the AI-native dev lifecycle in a repo
 
 Target: $ARGUMENTS (empty means the current project root).
 

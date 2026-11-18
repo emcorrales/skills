@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy the ADLC scaffold into a project without overwriting anything.
+"""Copy the AI-native SDLC scaffold into a project without overwriting anything.
 
     python3 scaffold.py <target-dir> [--name NAME] [--dry-run] [--no-git-hook]
 

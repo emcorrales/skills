@@ -13,7 +13,7 @@ After editing a skill, run `/plugin marketplace update emc-skills` (or reinstall
 ## Skills
 | Skill | What it does |
 |---|---|
-| `emc:adlc-init` | Sets up the AI-native dev lifecycle in a repo: intent.md, `/spec`, verifier agent, post-edit + pre-commit verify hooks, docs/specs + docs/plans, CLAUDE.md workflow. |
+| `emc:ai-native-sdlc-init` | Sets up the AI-native dev lifecycle in a repo: intent.md, `/spec`, verifier agent, post-edit + pre-commit verify hooks, docs/specs + docs/plans, CLAUDE.md workflow. |
 
 ## Adding a skill
 `skills/<name>/SKILL.md` (frontmatter `name` + `description`), plus optional `scripts/`,
