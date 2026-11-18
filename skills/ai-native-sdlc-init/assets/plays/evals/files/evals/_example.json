@@ -1,0 +1,12 @@
+{
+  "name": "example-reject-unknown-fields",
+  "source": "PR #123 (or incident INC-45): what this task was and why it's worth keeping",
+  "from": "<commit SHA from before the task was done>",
+  "prompt": "The status endpoint accepts unknown fields in the request body. Make it reject them with a 400, and add a test.",
+  "may_change": ["src/api/*", "tests/*"],
+  "checks": [
+    { "name": "verify passes", "run": "verify/run.sh" },
+    { "name": "no existing test lines removed", "run": "! git diff \"$EVAL_BASE\" -- tests | grep -E '^-[^-]'" },
+    { "name": "behaviour: unknown field rejected", "run": "python3 \"$EVAL_HELPERS\"/helpers/example_check.py" }
+  ]
+}

@@ -1,0 +1,40 @@
+# The same definition of done as local (verify/run.sh) on every PR and push to main.
+# Make it a required check in branch protection so nothing reaches main red.
+# If a Claude secret is set, a failed PR build gets a read-only triage comment.
+name: verify
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      HAS_CLAUDE: ${{ secrets.ANTHROPIC_API_KEY != '' || secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      # Toolchain for verify/run.sh, e.g.:
+      # - uses: actions/setup-node@v4
+      #   with: { node-version: 22 }
+      # - run: npm ci
+      - name: verify
+        run: |
+          set -o pipefail
+          verify/run.sh 2>&1 | tee verify.log
+      - name: triage failure (read-only)
+        if: failure() && github.event_name == 'pull_request' && env.HAS_CLAUDE == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -n "$ANTHROPIC_API_KEY" ] || unset ANTHROPIC_API_KEY
+          [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] || unset CLAUDE_CODE_OAUTH_TOKEN
+          npm install -g @anthropic-ai/claude-code
+          claude -p "verify/run.sh failed in CI; its output is in verify.log. From the log and the code, identify the likely cause and say whether it looks flaky or real. Reply in at most three lines, no preamble." \
+            --allowedTools "Read,Grep,Glob" > triage.md
+          { echo "**CI triage (Claude, read-only)**"; echo; cat triage.md; } > comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file comment.md

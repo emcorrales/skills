@@ -7,7 +7,7 @@
     {
       "name": "emc",
       "source": "./",
-      "description": "Personal skills: ai-native-sdlc-init (set up the six-stage AI-native SDLC in a repo)."
+      "description": "Personal skills: ai-native-sdlc-init (set up the AI-native SDLC playbook in a repo as modular plays)."
     }
   ]
 }

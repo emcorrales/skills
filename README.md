@@ -13,7 +13,7 @@ After editing a skill, run `/plugin marketplace update emc-skills` (or reinstall
 ## Skills
 | Skill | What it does |
 |---|---|
-| `emc:ai-native-sdlc-init` | Sets up the six-stage AI-native SDLC in a repo: intent.md, `/spec`, plan mode, `verify/run.sh` with post-edit + pre-commit hooks and CI, a reviewer agent + REVIEW.md, an approval-gate hook, docs/signals.md + `/triage`, CLAUDE.md workflow. |
+| `emc:ai-native-sdlc-init` | Sets up the AI-native SDLC playbook in a repo as modular plays. `core`: per-change `intent/` → `/intent`, `/spec`, `/implement` (plan mode → plan.md), `/fix`; `verify/run.sh` feedback loop; guard, approval-gate and post-edit hooks; verifier agent; delivery metrics. Optional: `review` (REVIEW.md, reviewer, `/sweep-pr`), `ci`, `evals`, `maintain` (control bands → next intent.md). |
 
 ## Adding a skill
 `skills/<name>/SKILL.md` (frontmatter `name` + `description`), plus optional `scripts/`,
